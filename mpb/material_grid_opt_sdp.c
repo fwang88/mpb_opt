@@ -1006,11 +1006,11 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
       MPI_Bcast(u, ntot, MPI_DOUBLE, optRank, MPI_COMM_WORLD);
       mpi_one_printf("broadcasting usum\n");
       MPI_Bcast(&usum, 1, MPI_DOUBLE, optRank, MPI_COMM_WORLD);
-      
+
       /* update u and epsilon */
       material_grids_set(u, grids, ngrids);
       reset_epsilon();
-      
+
       /* output epsilon file at each iteration from group 0*/ 
       char prefix[256];       
       snprintf(prefix, 256, "%s%04d-", title, irun+1);
@@ -1025,8 +1025,7 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
       irun++;
       MPI_Barrier(MPI_COMM_WORLD);
     }
-  
-  
+
   free(nl);
   free(u);
   free(Altemp);
@@ -1049,19 +1048,15 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
 
   free(eigenvalues);
   free(depsdu);
-  
+
   free(gap);
   free(obj);
-  
-  
+
   free(asub2);
   free(a2val);
-  
   free(barvarList);
-  
   MSK_deleteenv(&env);
 
-  
 #endif
   return 1;
   
