@@ -572,8 +572,6 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
   MPI_Comm_rank(mpb_comm, &rank);
   MPI_Comm_size(mpb_comm, &sz);
 
-  printf("rank = %d\n", rank);
-
   int global_rank, global_size, local_rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &global_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &global_size);
@@ -581,7 +579,7 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
 
   nk = kpoints.num_items;
  
-  printf("my group: %d, numgroups: %d\n", mpb_mygroup, mpb_numgroups);
+  //  printf("my group: %d, numgroups: %d\n", mpb_mygroup, mpb_numgroups);
 
   grids = get_material_grids(geometry, &ngrids);
 
@@ -662,7 +660,7 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
 
   MPI_Barrier(MPI_COMM_WORLD);
   get_epsilon();
-  MPI_Barrier(MPI_COMM_WORLD);
+ 
 
   while (irun < maxrun & usum >= utol)
     {
@@ -727,7 +725,7 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
 
       material_grids_get(u, grids, ngrids);
       
-      mpi_one_printf("number of k points is %d \n", nk);
+      mpi_one_printf("number of k points is nk = %d \n", nk);
 
       double t1;      
       
@@ -759,8 +757,8 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
         mpi_one_printf("nl[%d] = %d, nu[%d] = %d\n",k,nl[k],k,nu[k]);
         /* then send nl[k] to global rank = 0 */
 
-        MPI_Barrier(MPI_COMM_WORLD);
-        printf("\n start of comm ..\n");
+        //        MPI_Barrier(MPI_COMM_WORLD);
+        mpi_one_printf("\n start of comm ..\n");
 
         if(global_rank == 0) {
           asub[0] = 2*nl[k];
@@ -801,10 +799,10 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
             r = MSK_appendbarvars(task, 1, &tmp);
             mpi_one_printf("end recv from rank %d\n", i);
           }
-          MPI_Barrier(MPI_COMM_WORLD);
+          //          MPI_Barrier(MPI_COMM_WORLD);
         }
         
-        printf("\n end of comm ..\n");
+        mpi_one_printf("\n end of comm ..\n");
 
         /* fill the reduced gradient matrices into a temporary block diagonal matrix, */
         /* except the vectorized blocks are arranged side by side: [vec[block1] vec[block2] ... vec[blockn], vec[block1]*u[1] + ...+ vec[blockn]*u[n]],  */
@@ -899,7 +897,7 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
                 ++count;
               }
           }
-        printf("finishing put bar aij\n");
+        mpi_one_printf("finishing put bar aij\n");
         for(j=0; j<n; ++j) {
           buildSymmatTriplet(Autemp+stride*j, bara_v, nu[k]);
           
@@ -934,7 +932,7 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
       omega_u = sqrt(lambda_u);
 
       if(mpb_mygroup == 0)
-        mpi_one_printf("Before maximization, %d, gap is %0.15g \n",irun+1, gap[irun]);
+        // mpi_one_printf("Before maximization, %d, gap is %0.15g \n",irun+1, gap[irun]);
 
       freq_gap = 2*(omega_u-omega_l)/(omega_l+omega_u);
       if(mpb_mygroup == 0)
@@ -997,7 +995,7 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
           else
             mpi_one_printf("Error while optimizing.\n");     
 
-          printf("about to delete task\n");
+          mpi_one_printf("about to delete task\n");
           MSK_deletetask(&task);
 
         }
@@ -1015,8 +1013,10 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
       char prefix[256];       
       snprintf(prefix, 256, "%s%04d-", title, irun+1);
       get_epsilon();
-      if(mpb_mygroup == 0)
+      if(mpb_mygroup == 0) {
+        //printf("i am rank %d \n", global_rank);
         output_field_to_file(-1, prefix);
+      }
       /* output grid file at each iteration */ 
       strcat(prefix,"grid");
       if(mpb_mygroup == 0)

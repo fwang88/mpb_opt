@@ -86,12 +86,13 @@ real linear_interpolate(real rx, real ry, real rz,
      /* define a macro to give us data(x,y,z) on the grid,
 	in row-major order (the order used by HDF5): */
 #define D(x,y,z) (data[(((x)*ny + (y))*nz + (z)) * stride])
-
+     /*
      return(((D(x,y,z)*(1.0-dx) + D(x2,y,z)*dx) * (1.0-dy) +
 	     (D(x,y2,z)*(1.0-dx) + D(x2,y2,z)*dx) * dy) * (1.0-dz) +
 	    ((D(x,y,z2)*(1.0-dx) + D(x2,y,z2)*dx) * (1.0-dy) +
 	     (D(x,y2,z2)*(1.0-dx) + D(x2,y2,z2)*dx) * dy) * dz);
-
+     */
+     return D(x,y,z);
 #undef D
 }
 

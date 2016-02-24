@@ -1208,11 +1208,22 @@ void output_field_to_file(integer which_component, string filename_prefix)
 	  fname2 = fix_fname(fname, filename_prefix, mdata, 
 			     /* no parity suffix for epsilon: */
 			     curfield_type != 'n' && curfield_type != 'm');
-	  mpi_one_printf("Outputting %s...\n", fname2);
+          int rank;
+          MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	  mpi_one_printf("Outputting %s... from rank = %d \n", fname2, rank);
 	  file_id = matrixio_create(fname2);
 	  free(fname2);
 
-	  output_scalarfield((real *) curfield, dims, 
+          double fieldmax = 0;
+          int fieldsize, fieldi;
+          fieldsize = mdata->fft_output_size;
+          for (fieldi = 0; fieldi<fieldsize; fieldi++) {
+            if ((double)curfield[fieldi].re > fieldmax)
+              fieldmax = (double)curfield[fieldi].re;
+          }
+          printf("maximum epsilon value is %f\n", fieldmax);
+          
+          output_scalarfield((real *) curfield, dims, 
 			     local_dims, start, file_id, "data",
 			     last_dim_index, last_dim_start, last_dim_size,
 			     first_dim_start, first_dim_size,

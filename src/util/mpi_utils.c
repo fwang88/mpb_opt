@@ -129,6 +129,7 @@ void mpi_die(const char *template, ...)
 void mpi_one_printf(const char *template, ...)
 {
      if (mpi_is_master()) {
+         // if (mpi_is_master() && mpb_mygroup == 0) {
 	  va_list ap;
 	  va_start(ap, template);
 	  vprintf(template, ap);
