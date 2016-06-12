@@ -240,8 +240,12 @@ vector3 cur_kvector;
 scalar_complex *curfield = NULL;
 int curfield_band;
 char curfield_type = '-';
-
 void curfield_reset(void) { curfield = NULL; curfield_type = '-'; }
+
+scalar_complex *curfield1 = NULL;
+int curfield1_band;
+char curfield1_type = '-';
+void curfield1_reset(void) { curfield1 = NULL; curfield1_type = '-'; }
 
 /* R[i]/G[i] are lattice/reciprocal-lattice vectors */
 real R[3][3], G[3][3];
@@ -363,6 +367,18 @@ void set_parity(integer p)
 }
 
 /**************************************************************************/
+/* before the initialization, we can divide the processes with processes per k specified*/
+void num_proc_per_k(integer processes_per_k)
+{
+  int rank, sz;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &sz);
+
+  mpb_numgroups = sz/processes_per_k;
+  mpb_mygroup = divide_parallel_processes(mpb_numgroups);
+
+}
+
 
 /* Guile-callable function: init-params, which initializes any data
    that we need for the eigenvalue calculation.  When this function
@@ -706,7 +722,7 @@ void solve_kpoint(vector3 kvector)
 			 (void *) constraints,
 			 W, nwork_alloc, tolerance, &num_iters, flags, 0.0);
 	       else
-		    eigensolver(Hblock, eigvals + ib,
+		   eigensolver(Hblock, eigvals + ib,
 				maxwell_target_operator, (void *) mtdata,
                                 NULL, NULL,
 				simple_preconditionerp ? 
@@ -739,7 +755,7 @@ void solve_kpoint(vector3 kvector)
 			 W, nwork_alloc, tolerance, &num_iters, flags, 0.0);
                }
 	       else
-		    eigensolver(Hblock, eigvals + ib,
+  		    eigensolver(Hblock, eigvals + ib,
 				maxwell_operator, (void *) mdata,
                                 mdata->mu_inv ? maxwell_muinv_operator : NULL,
                                 (void *) mdata,
@@ -808,7 +824,10 @@ void solve_kpoint(vector3 kvector)
      /* create freqs array for storing frequencies in a Guile list */
      freqs.num_items = num_bands;
      CHK_MALLOC(freqs.items, number, freqs.num_items);
-     
+
+     eigenvalues.num_items = num_bands;
+     CHK_MALLOC(eigenvalues.items, number, eigenvalues.num_items);
+
      set_kpoint_index(kpoint_index + 1);
 
      mpi_one_printf("%sfreqs:, %d, %g, %g, %g, %g",
@@ -821,6 +840,17 @@ void solve_kpoint(vector3 kvector)
 	  mpi_one_printf(", %g", freqs.items[i]);
      }
      mpi_one_printf("\n");
+
+     mpi_one_printf("%seigenvalues:, %d, %g, %g, %g, %g",
+		    parity,
+		    kpoint_index, (double)k[0], (double)k[1], (double)k[2],
+		    vector3_norm(matrix3x3_vector3_mult(Gm, kvector)));
+     for (i = 0; i < num_bands; ++i) {
+	  eigenvalues.items[i] = eigvals[i];
+	  mpi_one_printf(", %g", eigenvalues.items[i]);
+     }
+     mpi_one_printf("\n");
+
 
      eigensolver_flops = evectmatrix_flops;
 

@@ -31,6 +31,9 @@ MPI_Comm mpb_comm = MPI_COMM_WORLD;
 int mpb_comm = 0;
 #endif
 
+mpb_numgroups = 1;
+mpb_mygroup = 0;
+
 /* Simple, somewhat hackish API to allow user to run multiple simulations
    in parallel in the same MPI job.  The user calls
 
@@ -126,6 +129,7 @@ void mpi_die(const char *template, ...)
 void mpi_one_printf(const char *template, ...)
 {
      if (mpi_is_master()) {
+         // if (mpi_is_master() && mpb_mygroup == 0) {
 	  va_list ap;
 	  va_start(ap, template);
 	  vprintf(template, ap);

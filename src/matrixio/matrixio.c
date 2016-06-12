@@ -334,6 +334,10 @@ static int matrixio_critical_section_tag = 0;
 
 static matrixio_id matrixio_create_(const char *fname, int parallel)
 {
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  //  printf("\n called by rank %d\n", rank);
+
 #if defined(HAVE_HDF5)
      char *new_fname;
      matrixio_id id;
